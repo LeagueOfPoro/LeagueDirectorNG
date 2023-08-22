@@ -4,7 +4,7 @@
 [![Qt](https://img.shields.io/badge/pyside6-6.2.4-brightgreen.svg)](https://www.qt.io/qt-for-python)
 [![Chat](https://img.shields.io/badge/chat-on%20discord-lightgrey.svg)](https://discord.com/invite/c2Qs9Y83hh)
 
-League Director NG is a tool for staging and recording videos from League of Legends replays. It is developed mainly to add extra features for creating in-game footage for the [League of Poro YT channel](https://www.youtube.com/@leagueofporo). This program builds on the original [League Director](https://github.com/riotgames/leaguedirector) developed by Riot Games.
+League Director NG is a tool for staging videos from League of Legends replays. It is developed mainly to add extra features for creating in-game footage for the [League of Poro YT channel](https://www.youtube.com/@leagueofporo). This program builds on the original [League Director](https://github.com/riotgames/leaguedirector) developed by Riot Games.
 
 ![Screenshot](resources/screenshot.png)
 
@@ -27,8 +27,14 @@ League Director NG is a tool for staging and recording videos from League of Leg
   - Undo / Redo
   - Save and load pre saved sequences
   - Adjustable keyframe blending
-* Video capture in webm or png format
 * Customizable key bindings
+
+## TO DO
+- Hover line that shows the time on the sequence
+- Drag select and move multiple keyframes
+- Copy and paste keyframes
+- New keyframes - snap-snap, linear-snap, snap-linear (to address the unwanted persistence of movement)
+- Fit curve to linear keyframes to avoid choppy cuts
 
 ## How To Use
 
