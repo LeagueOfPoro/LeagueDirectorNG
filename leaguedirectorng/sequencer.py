@@ -271,6 +271,13 @@ class SequenceTime(QGraphicsLineItem):
     pass
 
 
+class HoverLine(QGraphicsLineItem):
+    def __init__(self, height):
+        super().__init__(0, 1, 0, height)
+        self.setPen(QPen(QApplication.palette().highlight(), 1, Qt.DashLine))
+        self.setFlags(QGraphicsItem.ItemIgnoresTransformations)
+
+
 class SequenceTrackView(QGraphicsView):
     selectionChanged = Signal()
 
@@ -293,6 +300,8 @@ class SequenceTrackView(QGraphicsView):
         self.time.setPen(QPen(QApplication.palette().highlight(), 1))
         self.time.setFlags(QGraphicsItem.ItemIgnoresTransformations)
         self.scene.addItem(self.time)
+        self.hoverLine = HoverLine(self.scene.height() - 2)
+        self.scene.addItem(self.hoverLine)
         self.api.playback.updated.connect(self.update)
         self.api.sequence.updated.connect(self.update)
         self.api.sequence.dataLoaded.connect(self.reload)
@@ -300,6 +309,7 @@ class SequenceTrackView(QGraphicsView):
         headers.verticalScrollBar().valueChanged.connect(lambda value: self.verticalScrollBar().setValue(value))
         self.verticalScrollBar().valueChanged.connect(lambda value: headers.verticalScrollBar().setValue(value))
         self.scene.selectionChanged.connect(self.selectionChanged.emit)
+
 
     def reload(self):
         for track in self.tracks.values():
@@ -399,6 +409,15 @@ class SequenceTrackView(QGraphicsView):
     def animate(self):
         self.time.setPos(self.api.playback.currentTime * PRECISION, 0)
 
+    def mouseMoveEvent(self, event):
+        scene_pos = self.mapToScene(event.pos())
+        self.hoverLine.setPos(scene_pos.x(), 0)
+        self.hoverLine.show()
+        QGraphicsView.mouseMoveEvent(self, event)
+
+    def leaveEvent(self, event):
+        self.hoverLine.hide()
+        QGraphicsView.leaveEvent(self, event)
 
 class SequenceCombo(QComboBox):
     def __init__(self, api):
