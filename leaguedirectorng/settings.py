@@ -1,6 +1,6 @@
 import os
 import json
-from leaguedirector.widgets import userpath
+from leaguedirectorng.widgets import userpath
 
 class Settings(object):
 

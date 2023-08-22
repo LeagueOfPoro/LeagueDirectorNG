@@ -4,7 +4,7 @@ import json
 import copy
 import logging
 import functools
-from leaguedirector.widgets import userpath
+from leaguedirectorng.widgets import userpath
 from PySide6.QtCore import *
 from PySide6.QtNetwork import *
 

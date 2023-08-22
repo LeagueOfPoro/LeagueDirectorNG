@@ -6,7 +6,7 @@ from operator import attrgetter, methodcaller
 from PySide6.QtGui import *
 from PySide6.QtCore import *
 from PySide6.QtWidgets import *
-from leaguedirector.widgets import *
+from leaguedirectorng.widgets import *
 
 PRECISION = 10000.0
 SNAPPING = 4

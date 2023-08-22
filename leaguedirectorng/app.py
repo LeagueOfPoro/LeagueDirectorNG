@@ -4,17 +4,17 @@ import json
 import functools
 import logging
 import logging.handlers
-import leaguedirector
+import leaguedirectorng
 from PySide6.QtGui import *
 from PySide6.QtCore import *
 from PySide6.QtWidgets import *
 from PySide6.QtNetwork import *
-from leaguedirector.widgets import *
-from leaguedirector.sequencer import *
-from leaguedirector.enable import *
-from leaguedirector.api import Game, Playback, Render, Particles, Recording, Sequence
-from leaguedirector.bindings import Bindings
-from leaguedirector.settings import Settings
+from leaguedirectorng.widgets import *
+from leaguedirectorng.sequencer import *
+from leaguedirectorng.enable import *
+from leaguedirectorng.api import Game, Playback, Render, Particles, Recording, Sequence
+from leaguedirectorng.bindings import Bindings
+from leaguedirectorng.settings import Settings
 
 
 class SkyboxCombo(QComboBox):
@@ -937,7 +937,7 @@ class LeagueDirector(object):
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         logger.setLevel(logging.INFO)
-        logging.info('Started League Director (%s)', leaguedirector.__version__)
+        logging.info('Started League Director (%s)', leaguedirectorng.__version__)
         logging.info('Using SSL (%s)', QSslSocket.sslLibraryVersionString())
         qInstallMessageHandler(self.handleMessage)
 
@@ -948,7 +948,7 @@ class LeagueDirector(object):
         def callback():
             if response.error() == QNetworkReply.NoError:
                 version = json.loads(response.readAll().data().decode()).get('tag_name')
-                if version and version != 'v{}'.format(leaguedirector.__version__):
+                if version and version != 'v{}'.format(leaguedirectorng.__version__):
                     self.updateAvailable = True
         response.finished.connect(callback)
 
