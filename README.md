@@ -30,7 +30,7 @@ League Director NG is a tool for staging videos from League of Legends replays. 
 * Customizable key bindings
 
 ## TO DO
-- Hover line that shows the time on the sequence
+- ~~Hover line that shows the time on the sequence~~
 - Drag select and move multiple keyframes
 - Copy and paste keyframes
 - New keyframes - snap-snap, linear-snap, snap-linear (to address the unwanted persistence of movement)
