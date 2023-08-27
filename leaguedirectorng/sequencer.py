@@ -300,8 +300,15 @@ class SequenceTrackView(QGraphicsView):
         self.time.setPen(QPen(QApplication.palette().highlight(), 1))
         self.time.setFlags(QGraphicsItem.ItemIgnoresTransformations)
         self.scene.addItem(self.time)
+
         self.hoverLine = HoverLine(self.scene.height() - 2)
         self.scene.addItem(self.hoverLine)
+        self.hoverText = QGraphicsSimpleTextItem('', self.hoverLine)
+        self.hoverText.setBrush(QApplication.palette().brightText())
+        self.hoverText.setFont(QFont('Arial', 10))
+        self.hoverText.setPos(5, 5)
+        self.hoverText.setZValue(1)
+
         self.api.playback.updated.connect(self.update)
         self.api.sequence.updated.connect(self.update)
         self.api.sequence.dataLoaded.connect(self.reload)
@@ -413,11 +420,20 @@ class SequenceTrackView(QGraphicsView):
         scene_pos = self.mapToScene(event.pos())
         self.hoverLine.setPos(scene_pos.x(), 0)
         self.hoverLine.show()
+        self.hoverText.setText(self.formatTimeText(scene_pos.x()))
         QGraphicsView.mouseMoveEvent(self, event)
 
     def leaveEvent(self, event):
         self.hoverLine.hide()
         QGraphicsView.leaveEvent(self, event)
+
+    def formatTimeText(self, scenePosition):
+        timeSeconds = scenePosition / PRECISION
+        minutes = int(timeSeconds // 60)
+        seconds = int(timeSeconds % 60)
+        hundredths = int((timeSeconds % 1) * 100)
+        return f'{minutes:02}:{seconds:02}.{hundredths:02}'
+        
 
 class SequenceCombo(QComboBox):
     def __init__(self, api):
