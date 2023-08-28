@@ -30,7 +30,7 @@ League Director NG is a tool for staging videos from League of Legends replays. 
 * Customizable key bindings
 
 ## TO DO
-- Hover line that shows the time on the sequence
+- ~~Hover line that shows the time on the sequence~~
 - Drag select and move multiple keyframes
 - Copy and paste keyframes
 - New keyframes - snap-snap, linear-snap, snap-linear (to address the unwanted persistence of movement)
@@ -40,7 +40,7 @@ League Director NG is a tool for staging videos from League of Legends replays. 
 
 **Note: Windows Only**
 
-1. **[Download League Director](https://github.com/riotgames/leaguedirector/releases/latest)** from the releases page and install.
+1. **Download League Director** from the releases page and install.
 2. Start League Director and make sure the checkbox next to your install is checked.
 3. Start League of Legends and launch a replay. League Director will automatically connect.
 4. Open the options menu (ESC key) in game and ensure your Video Graphics settings are set to Very High. If you did need to change your Video Graphics settings, you'll need to restart the replay to enable the additional rendering features like the skybox.
@@ -72,24 +72,6 @@ EnableReplayApi=1
 ```
 
 If the option is already listed make sure it is set to 1. If the option is not listed at all just add it to the bottom of the list. You will need to restart the replay after changing this value for it to take effect.
-
-## Developing
-To run the source version of this application you need the [latest 3.10.4 version](https://www.python.org/downloads/)  of Python installed. From the windows command line:
-
-```
-# Clone this repository
-$ git clone https://github.com/riotgames/leaguedirector.git
-
-# Change directory
-$ cd leaguedirector
-
-# Run the startup script
-$ run.bat
-```
-
-The run batch file will setup a virtual environment using [Pipenv](https://pipenv.readthedocs.io/en/latest/) and install required dependencies such as [Qt](https://www.qt.io/qt-for-python).
-
-_League Director is being release by Riot Games as a reference implementation for the [Replay API](https://developer.riotgames.com/replay-apis.html). You are free to download and modify this source code or create your own fork of the project but we will not be accepting pull requests at this time._
 
 ## License
 Apache 2 (see [LICENSE](https://github.com/riotgames/leaguedirector/blob/master/LICENSE) for details)
