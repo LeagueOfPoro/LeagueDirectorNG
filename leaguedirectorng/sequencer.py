@@ -199,6 +199,12 @@ class SequenceTrack(QGraphicsRectItem):
         self.api.sequence.appendKeyframe(self.name, item)
         return SequenceKeyframe(self.api, item, self)
 
+    def pasteKeyframe(self, item):
+        print("dadadad")
+        print(item)
+        self.api.sequence.appendKeyframe(self.name, item)
+        return SequenceKeyframe(self.api, item, self)
+
     def clearKeyframes(self):
         for item in self.childItems():
             if isinstance(item, SequenceKeyframe):
@@ -378,6 +384,21 @@ class SequenceTrackView(QGraphicsView):
         if selected:
             self.api.playback.pause(statistics.mean(selected))
 
+    def copySelectedKeyframes(self):
+        self.copiedKeyframes = []
+        for selected in self.selectedKeyframes():
+            self.copiedKeyframes.append((selected.track, copy.deepcopy(selected.item)))
+        self.copiedKeyframes = sorted(self.copiedKeyframes, key=lambda x: x[1]['time'])
+
+    def pasteKeyframes(self):
+        if hasattr(self, 'copiedKeyframes') and self.copiedKeyframes:
+            mouse_pos = self.mapFromGlobal(QCursor.pos())
+            scene_pos = self.mapToScene(mouse_pos)
+            offset = (scene_pos.x() / PRECISION) - self.copiedKeyframes[0][1]['time']
+            for track, keyframeData in self.copiedKeyframes:
+                keyframeData['time'] += offset
+                track.pasteKeyframe(keyframeData)
+
     def update(self):
         for track in self.tracks.values():
             track.update()
@@ -393,10 +414,10 @@ class SequenceTrackView(QGraphicsView):
                 Qt.KeyboardModifier.NoModifier
             ))
         elif event.button() == Qt.LeftButton:
-            if event.modifiers() == Qt.ShiftModifier:
-                self.setDragMode(QGraphicsView.RubberBandDrag)
                 QGraphicsView.mousePressEvent(self, event)
-        QGraphicsView.mousePressEvent(self, event)
+                if not self.scene.selectedItems():
+                    self.setDragMode(QGraphicsView.RubberBandDrag)
+                    QGraphicsView.mousePressEvent(self, event)
 
     def mouseDoubleClickEvent(self, event):
         QGraphicsView.mouseDoubleClickEvent(self, event)

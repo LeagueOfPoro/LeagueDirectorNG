@@ -629,6 +629,10 @@ class TimelineWindow(QWidget):
             self.api.sequence.undo()
         elif name == 'sequence_redo':
             self.api.sequence.redo()
+        elif name == 'kf_copy':
+            self.sequenceTracks.copySelectedKeyframes()
+        elif name == 'kf_paste':
+            self.sequenceTracks.pasteKeyframes()
         elif name == 'kf_position':
             self.sequenceTracks.addKeyframe('cameraPosition')
         elif name == 'kf_rotation':
@@ -1039,6 +1043,8 @@ class LeagueDirector(object):
             ('time_plus_30',                'Time +30 Seconds',                 ''),
             ('time_plus_60',                'Time +60 Seconds',                 ''),
             ('time_plus_120',               'Time +120 Seconds',                ''),
+            ('kf_copy',                     'Copy Keyframe',                    'Ctrl+C'),
+            ('kf_paste',                    'Paste Keyframe',                   'Ctrl+V'),
             ('kf_position',                 'Keyframe Position',                '+'),
             ('kf_rotation',                 'Keyframe Rotation',                '+'),
             ('kf_speed',                    'Keyframe Speed',                   ''),
