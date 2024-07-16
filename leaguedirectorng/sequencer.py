@@ -13,7 +13,6 @@ SNAPPING = 4
 OVERLAP = 4
 ADJACENT = 0.05
 
-
 class SequenceKeyframe(QGraphicsPixmapItem):
 
     def __init__(self, api, item, track):
@@ -152,6 +151,10 @@ class SequenceKeyframe(QGraphicsPixmapItem):
         return time
 
 
+# class CompositeSequenceKeyframe(SequenceKeyframe):
+#     pass
+
+
 class SequenceTrack(QGraphicsRectItem):
     height = 22
 
@@ -200,7 +203,6 @@ class SequenceTrack(QGraphicsRectItem):
         return SequenceKeyframe(self.api, item, self)
 
     def pasteKeyframe(self, item):
-        print("dadadad")
         print(item)
         self.api.sequence.appendKeyframe(self.name, item)
         return SequenceKeyframe(self.api, item, self)
