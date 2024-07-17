@@ -83,10 +83,12 @@ class Resource(QObject):
         error = response.error()
         if error == QNetworkReply.NoError:
             Resource.connected = True
+            # data = response.readAll().data().decode()
             self.apply(json.loads(response.readAll().data().decode()))
             self.timestamp = time.time()
         elif error in (QNetworkReply.ConnectionRefusedError, QNetworkReply.TimeoutError):
             Resource.connected = False
+            logging.error("Not connected: {}".format(error))
         else:
             logging.error("Request Failed: {} {}".format(self.url, response.errorString()))
         self.updated.emit()

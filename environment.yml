@@ -1,0 +1,24 @@
+name: director
+channels:
+  - defaults
+dependencies:
+  - bzip2=1.0.8=h2bbff1b_6
+  - ca-certificates=2024.7.2=haa95532_0
+  - libffi=3.4.4=hd77b12b_1
+  - openssl=1.1.1w=h2bbff1b_0
+  - pip=24.0=py310haa95532_0
+  - python=3.10.4=hbb2ffb3_0
+  - setuptools=69.5.1=py310haa95532_0
+  - sqlite=3.45.3=h2bbff1b_0
+  - tk=8.6.14=h0416ee5_0
+  - tzdata=2024a=h04d1e81_0
+  - vc=14.2=h2eaa2aa_4
+  - vs2015_runtime=14.29.30133=h43f2093_4
+  - wheel=0.43.0=py310haa95532_0
+  - xz=5.4.6=h8cc25b3_1
+  - zlib=1.2.13=h8cc25b3_1
+  - pip:
+      - psutil==6.0.0
+      - pyside6==6.2.4
+      - shiboken6==6.2.4
+prefix: C:\Users\PC\.conda\envs\director
