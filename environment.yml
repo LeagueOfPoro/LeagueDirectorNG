@@ -21,4 +21,3 @@ dependencies:
       - psutil==6.0.0
       - pyside6==6.2.4
       - shiboken6==6.2.4
-prefix: C:\Users\PC\.conda\envs\director
