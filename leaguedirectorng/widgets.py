@@ -201,18 +201,18 @@ class BooleanInput(QWidget):
         self.setLayout(self.layout)
 
     def handleValueChanged(self, state):
-        self.valueChanged.emit(bool(state == Qt.Checked))
+        self.valueChanged.emit(bool(Qt.CheckState(state) == Qt.CheckState.Checked))
 
     def update(self, value):
         self.blockSignals(True)
-        self.checkbox.setCheckState(Qt.Checked if value else Qt.Unchecked)
+        self.checkbox.setCheckState(Qt.CheckState.Checked if value else Qt.CheckState.Unchecked)
         self.blockSignals(False)
 
     def setValue(self, value):
-        self.checkbox.setCheckState(Qt.Checked if value else Qt.Unchecked)
+        self.checkbox.setCheckState(Qt.CheckState.Checked if value else Qt.CheckState.Unchecked)
 
     def value(self):
-        return bool(self.checkbox.checkState() == Qt.Checked)
+        return bool(self.checkbox.checkState() == Qt.CheckState.Checked)
 
     def toggle(self):
         self.setValue(not self.value())
