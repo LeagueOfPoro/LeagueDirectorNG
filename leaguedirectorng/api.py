@@ -7,7 +7,10 @@ import functools
 from leaguedirectorng.widgets import userpath
 from PySide6.QtCore import *
 from PySide6.QtNetwork import *
+from scipy.interpolate import CubicSpline
+import numpy as np
 
+SAMPLE_RATE = 60.0 
 
 class Resource(QObject):
     """
@@ -340,6 +343,7 @@ class Sequence(Resource):
     }
     blendOptions = [
         'linear',
+        'fluid',
         'snap',
         'smoothStep',
         'smootherStep',
@@ -449,13 +453,134 @@ class Sequence(Resource):
             self.loadFile('default')
             self.saveFileNow()
             self.reloadNames()
-
     def saveRemoteNow(self):
         self.sortData()
-        if self.sequencing:
-            Resource.update(self, self.data())
-        else:
+        if not self.sequencing:
             Resource.update(self, {})
+            return
+
+        payload = {}
+        for track_name, kfs in self.data().items():
+            if len(kfs) < 2:
+                payload[track_name] = list(kfs)
+                continue
+
+            merged = []
+            n = len(kfs)
+            i = 0
+
+            while i < n - 1:
+                # detect a run of ≥3 fluid keyframes
+                if i + 2 < n and all(kf.get('blend') == 'fluid' for kf in kfs[i:i+3]):
+                    # extend the run as far as 'fluid' continues
+                    j = i + 2
+                    while j + 1 < n and kfs[j+1].get('blend') == 'fluid':
+                        j += 1
+                    run = kfs[i : j+1]
+                    sub = self._fluid_sample(run)
+
+                    if not merged:
+                        merged.extend(sub)
+                    else:
+                        merged.extend(sub[1:])  # drop duplicate boundary
+
+                    i = j
+                else:
+                    # single-segment linear/ease interpolation
+                    seg = self._linear_sample(kfs[i], kfs[i+1])
+                    if not merged:
+                        merged.extend(seg)
+                    else:
+                        merged.extend(seg[1:])
+                    i += 1
+
+            payload[track_name] = merged
+
+        Resource.update(self, payload)
+
+
+    def _linear_sample(self, a, b):
+        """Interpolate between two keyframes a→b, honoring 'linear' or 'smoothStep'."""
+        t1, v1, blend = a['time'], a['value'], a.get('blend','linear')
+        t2, v2 = b['time'], b['value']
+
+        segment = [{'time': t1, 'value': v1, 'blend': 'linear'}]
+        steps = max(1, int((t2 - t1) * SAMPLE_RATE))
+        for i in range(1, steps):
+            α = i/float(steps)
+            t = t1 + α*(t2 - t1)
+
+            # scalar
+            if isinstance(v1, (int, float)):
+                if blend == 'smoothStep':
+                    β = α*α*(3 - 2*α)
+                    val = v1*(1-β) + v2*β
+                else:
+                    val = v1*(1-α) + v2*α
+
+            # vector or color
+            elif isinstance(v1, dict):
+                val = {comp: v1[comp]*(1-α) + v2[comp]*α for comp in v1}
+
+            else:
+                val = v1
+
+            segment.append({'time': t, 'value': val, 'blend': 'linear'})
+
+        segment.append({'time': t2, 'value': v2, 'blend': 'linear'})
+        return segment
+
+
+    def _fluid_sample(self, kfs):
+        """Fit a global spline through kfs and sample it densely."""
+        times = np.array([kf['time'] for kf in kfs])
+        first = kfs[0]['value']
+
+        # scalar track
+        if isinstance(first, (int, float)):
+            vals = np.array([float(kf['value']) for kf in kfs])
+            spline = CubicSpline(times, vals, bc_type='natural')
+
+            t0, t1 = times[0], times[-1]
+            steps = max(2, int((t1 - t0)*SAMPLE_RATE) + 1)
+            sampled_t = np.linspace(t0, t1, steps)
+
+            return [
+                {'time': float(t),
+                 'value': float(spline(t)),
+                 'blend': 'linear'}
+                for t in sampled_t
+            ]
+
+        # vector3 track
+        elif isinstance(first, dict) and {'x','y','z'}.issubset(first):
+            comps = np.vstack([[kf['value'][c] for c in ('x','y','z')] for kf in kfs])
+            splines = [CubicSpline(times, comps[:,i], bc_type='natural') for i in range(3)]
+
+            t0, t1 = times[0], times[-1]
+            steps = max(2, int((t1 - t0)*SAMPLE_RATE) + 1)
+            sampled_t = np.linspace(t0, t1, steps)
+
+            out = []
+            for t in sampled_t:
+                x, y, z = (spline(t) for spline in splines)
+                out.append({
+                    'time':  float(t),
+                    'value': {'x':float(x),'y':float(y),'z':float(z)},
+                    'blend': 'linear'
+                })
+            return out
+
+        # fallback for color, bool, etc.
+        else:
+            flat = []
+            for a, b in zip(kfs, kfs[1:]):
+                seg = self._linear_sample(a, b)
+                if not flat:
+                    flat.extend(seg)
+                else:
+                    flat.extend(seg[1:])
+            return flat
 
     def saveRemote(self):
         self.saveRemoteTimer.start(0)
