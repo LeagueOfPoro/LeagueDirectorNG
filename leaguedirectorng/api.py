@@ -10,7 +10,7 @@ from PySide6.QtNetwork import *
 from scipy.interpolate import CubicSpline
 import numpy as np
 
-SAMPLE_RATE = 60.0 
+SAMPLE_RATE = 20.0 
 
 class Resource(QObject):
     """
@@ -94,6 +94,7 @@ class Resource(QObject):
             logging.error("Not connected: {}".format(error))
         else:
             logging.error("Request Failed: {} {}".format(self.url, response.errorString()))
+            print(response.readAll().data().decode())
         self.updated.emit()
 
     def apply(self, data):
@@ -342,8 +343,8 @@ class Sequence(Resource):
         'depthOfFieldFar': [],
     }
     blendOptions = [
-        'linear',
         'fluid',
+        'linear',
         'snap',
         'smoothStep',
         'smootherStep',
@@ -453,6 +454,7 @@ class Sequence(Resource):
             self.loadFile('default')
             self.saveFileNow()
             self.reloadNames()
+            
     def saveRemoteNow(self):
         self.sortData()
         if not self.sequencing:
@@ -465,71 +467,49 @@ class Sequence(Resource):
                 payload[track_name] = list(kfs)
                 continue
 
-            merged = []
-            n = len(kfs)
-            i = 0
-
-            while i < n - 1:
-                # detect a run of ≥3 fluid keyframes
-                if i + 2 < n and all(kf.get('blend') == 'fluid' for kf in kfs[i:i+3]):
-                    # extend the run as far as 'fluid' continues
-                    j = i + 2
-                    while j + 1 < n and kfs[j+1].get('blend') == 'fluid':
-                        j += 1
-                    run = kfs[i : j+1]
-                    sub = self._fluid_sample(run)
-
-                    if not merged:
-                        merged.extend(sub)
-                    else:
-                        merged.extend(sub[1:])  # drop duplicate boundary
-
-                    i = j
+            # 1) split into fluid vs non-fluid chunks
+            chunks = []
+            curr = [kfs[0]]
+            curr_fluid = (kfs[0].get('blend') == 'fluid')
+            for kf in kfs[1:]:
+                is_fluid = (kf.get('blend') == 'fluid')
+                if is_fluid == curr_fluid:
+                    curr.append(kf)
                 else:
-                    # single-segment linear/ease interpolation
-                    seg = self._linear_sample(kfs[i], kfs[i+1])
-                    if not merged:
-                        merged.extend(seg)
+                    chunks.append((curr_fluid, curr))
+                    curr = [kf]
+                    curr_fluid = is_fluid
+            chunks.append((curr_fluid, curr))
+
+            # 2) build merged list
+            merged = []
+            for is_fluid, chunk in chunks:
+                if is_fluid and len(chunk) >= 3:
+                    # spline-sample only true fluid chunks
+                    sub = self._fluid_sample(chunk)
+                else:
+                    # pass through all original keyframes for linear (or too-short) chunks
+                    sub = [
+                        {
+                        'time':  kf['time'],
+                        'value': kf['value'],
+                        'blend': kf.get('blend','linear')
+                        }
+                        for kf in chunk
+                    ]
+
+                # 3) stitch, dropping only exact-duplicate times at boundaries
+                if not merged:
+                    merged.extend(sub)
+                else:
+                    if sub and merged[-1]['time'] == sub[0]['time']:
+                        merged.extend(sub[1:])
                     else:
-                        merged.extend(seg[1:])
-                    i += 1
+                        merged.extend(sub)
 
             payload[track_name] = merged
 
         Resource.update(self, payload)
-
-
-    def _linear_sample(self, a, b):
-        """Interpolate between two keyframes a→b, honoring 'linear' or 'smoothStep'."""
-        t1, v1, blend = a['time'], a['value'], a.get('blend','linear')
-        t2, v2 = b['time'], b['value']
-
-        segment = [{'time': t1, 'value': v1, 'blend': 'linear'}]
-        steps = max(1, int((t2 - t1) * SAMPLE_RATE))
-        for i in range(1, steps):
-            α = i/float(steps)
-            t = t1 + α*(t2 - t1)
-
-            # scalar
-            if isinstance(v1, (int, float)):
-                if blend == 'smoothStep':
-                    β = α*α*(3 - 2*α)
-                    val = v1*(1-β) + v2*β
-                else:
-                    val = v1*(1-α) + v2*α
-
-            # vector or color
-            elif isinstance(v1, dict):
-                val = {comp: v1[comp]*(1-α) + v2[comp]*α for comp in v1}
-
-            else:
-                val = v1
-
-            segment.append({'time': t, 'value': val, 'blend': 'linear'})
-
-        segment.append({'time': t2, 'value': v2, 'blend': 'linear'})
-        return segment
-
 
     def _fluid_sample(self, kfs):
         """Fit a global spline through kfs and sample it densely."""
@@ -570,17 +550,15 @@ class Sequence(Resource):
                     'blend': 'linear'
                 })
             return out
-
-        # fallback for color, bool, etc.
         else:
-            flat = []
-            for a, b in zip(kfs, kfs[1:]):
-                seg = self._linear_sample(a, b)
-                if not flat:
-                    flat.extend(seg)
-                else:
-                    flat.extend(seg[1:])
-            return flat
+            return [
+                {
+                    'time':  kf['time'],
+                    'value': kf['value'],
+                    'blend': kf.get('blend', 'linear')
+                }
+                for kf in kfs
+            ]
 
     def saveRemote(self):
         self.saveRemoteTimer.start(0)
